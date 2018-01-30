@@ -25,8 +25,8 @@ class Selection extends Component {
                onClick={ this.handleClick(null) }>x</div>
 
           <div className="selection__image-wrapper">
-            <img class="selection__image" src={img_path + 'normal/' + selected.name + '.gif'} alt=""/>
-            <img class="selection__image" src={img_path + 'back-normal/' + selected.name + '.gif'} alt=""/>
+            <img className="selection__image" src={img_path + 'normal/' + selected.name + '.gif'} alt=""/>
+            <img className="selection__image" src={img_path + 'back-normal/' + selected.name + '.gif'} alt=""/>
           </div>
 
           <div className="selection__details">
