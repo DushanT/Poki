@@ -13,6 +13,7 @@ class ListItem extends Component {
     return (
       <li className="list__item"
         onClick={ this.handleClick(item) } >
+        
         <img 
           src={item.sprites.front_default} 
           className="item__image"

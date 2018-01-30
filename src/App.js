@@ -8,7 +8,7 @@ import './App.css';
 import List from './components/List';
 import Selection from './components/Selection';
 
-axios.defaults.baseURL = 'http://pokeapi.co/api/v2/';
+axios.defaults.baseURL = 'https://pokeapi.co/api/v2/';
 const pokisMax = 9;
 
 
@@ -18,10 +18,7 @@ class App extends Component {
     super(props);
     this.handleSelect = this.handleSelect.bind(this);
 
-    this.state = { 
-      pokis: [], 
-      selected: null 
-    };
+    this.state = { pokis: [], selected: null };
   }
 
   handleSelect(item) {
@@ -32,41 +29,45 @@ class App extends Component {
     this.setState({ selected: selected });
   }
 
-  loadData() {
-    var pokis = [];
-    if(localStorage.pokis) {
-      pokis = JSON.parse(localStorage.pokis);
-      this.setState({ pokis: pokis });
-    }
-
-    this.getData(pokis, 1);
-  }
-
-  getData(pokis, id) {
+  getData() {
     var _ = this;
 
-    if(!pokis)
+    var pokis = [];
+
+    if(localStorage.pokis !== undefined) {
+      try {
+        pokis = JSON.parse(localStorage.pokis);
+      } catch(e) {
+        console.log(e);
+      }
+      _.setState({ pokis: pokis });
+    }
+
+    if (!pokis || pokisMax !== pokis.length) {
+
       pokis = [];
-    
-    if (pokisMax !== pokis.length) {
 
-      var loaded = 0;
+      for (var i = 1; i <= pokisMax; i++) {
 
-      axios.get('pokemon/' + id++)
-        .then(function (response) {
-          pokis[response.data.id - 1] = response.data;
-          if(++loaded === pokisMax) {
-            _.setState({ pokis: pokis });
-            localStorage.pokis = JSON.stringify(pokis);
-          } else {
-            this.getData(pokis, id);
-          }
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
+        this.request(pokis, i);
+
+      }
 
     }
+  }
+
+  request(pokis, id) {
+    var _ = this;
+
+    axios.get('pokemon/' + id)
+      .then(function (response) {
+        pokis[response.data.id - 1] = response.data;
+        _.setState({ pokis: pokis });
+        localStorage.pokis = JSON.stringify(pokis);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   }
 
   render() {
@@ -96,7 +97,7 @@ class App extends Component {
   }
 
   componentWillMount() {
-    this.loadData();
+    this.getData();
   }
 }
 
