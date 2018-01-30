@@ -33,8 +33,11 @@ class App extends Component {
   }
 
   loadData() {
-    var pokis = JSON.parse(localStorage.pokis);
-    this.setState({ pokis: pokis });
+    var pokis = [];
+    if(localStorage.pokis) {
+      pokis = JSON.parse(localStorage.pokis);
+      this.setState({ pokis: pokis });
+    }
 
     this.getData(pokis, 1);
   }
@@ -42,9 +45,11 @@ class App extends Component {
   getData(pokis, id) {
     var _ = this;
 
-    if (!pokis || pokisMax !== pokis.length) {
-
+    if(!pokis)
       pokis = [];
+    
+    if (pokisMax !== pokis.length) {
+
       var loaded = 0;
 
       axios.get('pokemon/' + id++)
