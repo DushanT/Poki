@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Scrollbars } from 'react-custom-scrollbars';
 import { CSSTransitionGroup as Transition } from 'react-transition-group';
-import '../style/Selection.css';
 
 const img_path = 'https://img.pokemondb.net/sprites/black-white/anim/';
 

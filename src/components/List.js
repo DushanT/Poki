@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import ListItem from './ListItem';
-import '../style/List.css';
 
 const template = [0,0,1,0,0,
                   0,1,0,1,0,

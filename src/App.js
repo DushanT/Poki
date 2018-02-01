@@ -4,10 +4,6 @@ import PropTypes from 'prop-types';
 import axios from 'axios';
 
 import logo from './assets/logo.svg';
-import './App.css';
-
-import './style/Scrollbars.css';
-import './style/Transitions.css';
 
 import List from './components/List';
 import Selection from './components/Selection';
@@ -20,11 +16,14 @@ class App extends Component {
   constructor(props) {
     super(props);
 
+    this.loaded = 0;
+
     // default state
     this.state = { 
       items: [],
       selected: null, 
       max: 9,
+      loaded: 0,
     };
   }
 
@@ -40,20 +39,8 @@ class App extends Component {
   }
 
   // set storage
-  setStorage(state) {
-    if(!state)
-      return;
-
-    localStorage.setItem('poki', JSON.stringify(state));
-  }
-
-  // helper save state 
-  saveState(state) {
-    if(!state) 
-      return;
-
-    this.setState(state);
-    this.setStorage(this.state);
+  setStorage() {
+    localStorage.setItem('poki', JSON.stringify(this.state));
   }
 
   // helper load state 
@@ -63,21 +50,15 @@ class App extends Component {
 
     if(storage) {
       state = JSON.parse(storage);
-      this.setState(state);
+      this.saveState(state);
     }
 
     this.loadItems(state.items);
 
   }
 
-  // handling selection of item
-  handleSelect = (item) => {
-    let selected = null;
-
-    if(item)
-      selected = this.state.items[item.id - 1];
-
-    this.saveState({ selected: selected });
+  saveState(state) {
+    this.setState(state, () => this.setStorage());
   }
 
   // get core data from localStorage 
@@ -87,18 +68,51 @@ class App extends Component {
       for (let id = 0; id < this.state.max; id++) {
         this.getItem(oldItems, id+1);
       }
+    } else {
+      this.saveState({ 
+        loaded: oldItems.length 
+      });
     }
+  }
+
+  // handling selection of item
+  handleSelect = (item) => {
+    let selected = null;
+
+    if(item !== null)
+      selected = this.state.items[item.id - 1];
+
+    this.saveState({ 
+      selected: selected 
+    });
   }
 
   // get item by id or name
   getItem(items, selector) {
     let _ = this;
 
+    /*setTimeout(() => {
+      let itemData = {
+        id: 1,
+        name: 'bulba',
+        sprites: [],
+        base_experience: 100,
+        height: 10,
+        weight: 1000,
+        abilities: [],
+      };
+
+      items[selector-1] = itemData;
+      _.saveState({ 
+        loaded: ++_.loaded, 
+      });
+    }, 500 * selector);
+    return;*/
+
     axios.get('pokemon/' + selector)
       .then(function (response) {
         let data = response.data;
         if(data) {
-          // console.log(data);
           let itemData = {
             id: data.id,
             name: data.name,
@@ -107,10 +121,14 @@ class App extends Component {
             height: data.height,
             weight: data.weight,
             abilities: data.abilities,
-          };
+          };          
 
           items[response.data.id - 1] = itemData;
-          _.saveState({ items: items });
+
+          _.saveState({ 
+            loaded: ++_.loaded,
+            items: items 
+          });
 
         }
       })
@@ -119,10 +137,25 @@ class App extends Component {
       });
   }
 
+  reload = () => {
+    
+    this.setState({ 
+      items: [],
+      selected: null, 
+      max: 9,
+      loaded: 0,
+    }, () => {
+      this.loaded = 0;
+      this.setStorage();
+      this.loadState();
+    });
+  }
+
   render() {
     const selected = this.state.selected;
     const items = this.state.items;
-    const loading = this.state.loading;
+    const percent = (this.state.loaded / this.state.max) * 100;
+    const loading = percent !== 100 ;
 
     return (
       <div className="app">
@@ -132,25 +165,40 @@ class App extends Component {
         <img src={logo} 
           className="app__background" 
           alt="logo"/>
-        
-        <div className="app__main">
 
-          <div>
-            {loading}
+        {loading && 
+          <div className="loading">
+            <div className="loading__percent">
+              {Math.ceil(percent)}% 
+            </div>
+            <div className="loading__fill" style={{width: percent + '%'}}>
+            </div>
           </div>
+        }
+        
+        {!loading && 
+          <div className="main">
 
-          <Selection 
-            selected={selected} 
-            handleSelect={ item => this.handleSelect(item) } />
+            <Selection 
+              selected={selected} 
+              handleSelect={ item => this.handleSelect(item) } />
 
-          <List 
-            items={items} 
-            handleSelect={ item => this.handleSelect(item) } />
+            <List 
+              items={items} 
+              handleSelect={ item => this.handleSelect(item) } />
 
-        </div>
+          </div>
+        }
+
+        {!loading && 
+          <div className="app__reset"
+            onClick={ this.reload }>
+              Reload
+          </div>
+        }
 
       </div>
-    );
+    );    
   }
 
 }
