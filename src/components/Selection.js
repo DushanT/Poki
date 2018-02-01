@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Scrollbars } from 'react-custom-scrollbars';
-import Transition from 'react-addons-css-transition-group';
+import { CSSTransitionGroup as Transition } from 'react-transition-group';
 import '../style/Selection.css';
 
 const img_path = 'https://img.pokemondb.net/sprites/black-white/anim/';
@@ -36,17 +36,17 @@ class Selection extends Component {
             <div className="selection__close" 
                  onClick={ this.handleClick(null) }>x</div>
 
-            <div className="selection__image-wrapper">
-              <img className="selection__image" src={img_path + 'normal/' + selected.name + '.gif'} alt=""/>
-              <img className="selection__image" src={img_path + 'back-normal/' + selected.name + '.gif'} alt=""/>
-            </div>
-
-            <div className="details">
-              <div className="details__name" >
-                {selected.name}
+            <Scrollbars autoHide>
+              <div className="selection__image-wrapper">
+                <img className="selection__image" src={img_path + 'normal/' + selected.name + '.gif'} alt=""/>
+                <img className="selection__image" src={img_path + 'back-normal/' + selected.name + '.gif'} alt=""/>
               </div>
-              <div className="details__more">
-                <Scrollbars autoHide>
+
+              <div className="details">
+                <div className="details__name" >
+                  {selected.name}
+                </div>
+                <div className="details__more">
                   <div>
                     <span className="details__info-name">Base experience: </span> 
                     <span>{selected.base_experience}</span>
@@ -69,9 +69,9 @@ class Selection extends Component {
                       ))}
                     </ul>
                   </div>
-                </Scrollbars>
+                </div>
               </div>
-            </div>
+            </Scrollbars>
           </div>
         }
       </div>

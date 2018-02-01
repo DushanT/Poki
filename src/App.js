@@ -11,6 +11,7 @@ import './style/Transitions.css';
 
 import List from './components/List';
 import Selection from './components/Selection';
+import GithubCorner from './components/GithubCorner';
 
 axios.defaults.baseURL = 'https://pokeapi.co/api/v2/';
 
@@ -125,6 +126,8 @@ class App extends Component {
 
     return (
       <div className="app">
+
+        <GithubCorner/>
 
         <img src={logo} 
           className="app__background" 

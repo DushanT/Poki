@@ -141,8 +141,8 @@
 
 @media (max-width: 320px), (max-height: 320px) {
   .list {
-    width: 200px;
-    height: 200px;
+    width: 250px;
+    height: 250px;
   }
   .item__name {
     font-size: 8px;
