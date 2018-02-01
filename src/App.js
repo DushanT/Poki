@@ -1,69 +1,117 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 import axios from 'axios';
 
-import logo from './logo.svg';
+import logo from './assets/logo.svg';
 import './App.css';
+
+import './style/Scrollbars.css';
+import './style/Transitions.css';
 
 import List from './components/List';
 import Selection from './components/Selection';
 
 axios.defaults.baseURL = 'https://pokeapi.co/api/v2/';
-const pokisMax = 9;
-
 
 class App extends Component {
 
   constructor(props) {
     super(props);
-    this.handleSelect = this.handleSelect.bind(this);
 
-    this.state = { pokis: [], selected: null };
+    // default state
+    this.state = { 
+      items: [],
+      selected: null, 
+      max: 9,
+    };
   }
 
-  handleSelect(item) {
-    var selected =  item 
-                    ? this.state.pokis[item.id - 1] 
-                    : null;
-
-    this.setState({ selected: selected });
+  // init data
+  componentDidMount() {
+    // localStorage.clear();
+    this.loadState();
   }
 
-  getData() {
-    var _ = this;
+  // main storage
+  getStorage() {
+    return localStorage.poki;
+  }
 
-    var pokis = [];
+  // set storage
+  setStorage(state) {
+    if(!state)
+      return;
 
-    if(localStorage.pokis !== undefined) {
-      try {
-        pokis = JSON.parse(localStorage.pokis);
-      } catch(e) {
-        console.log(e);
-      }
-      _.setState({ pokis: pokis });
+    localStorage.setItem('poki', JSON.stringify(state));
+  }
+
+  // helper save state 
+  saveState(state) {
+    if(!state) 
+      return;
+
+    this.setState(state);
+    this.setStorage(this.state);
+  }
+
+  // helper load state 
+  loadState() {
+    let state = this.state;
+    const storage = this.getStorage();
+
+    if(storage) {
+      state = JSON.parse(storage);
+      this.setState(state);
     }
 
-    if (!pokis || pokisMax !== pokis.length) {
+    this.loadItems(state.items);
 
-      pokis = [];
+  }
 
-      for (var i = 1; i <= pokisMax; i++) {
+  // handling selection of item
+  handleSelect = (item) => {
+    let selected = null;
 
-        this.request(pokis, i);
+    if(item)
+      selected = this.state.items[item.id - 1];
 
+    this.saveState({ selected: selected });
+  }
+
+  // get core data from localStorage 
+  // or request from API
+  loadItems(oldItems) {
+    if (!oldItems.length || (this.state.max !== oldItems.length)) {
+      for (let id = 0; id < this.state.max; id++) {
+        this.getItem(oldItems, id+1);
       }
-
     }
   }
 
-  request(pokis, id) {
-    var _ = this;
+  // get item by id or name
+  getItem(items, selector) {
+    let _ = this;
 
-    axios.get('pokemon/' + id)
+    axios.get('pokemon/' + selector)
       .then(function (response) {
-        pokis[response.data.id - 1] = response.data;
-        _.setState({ pokis: pokis });
-        localStorage.pokis = JSON.stringify(pokis);
+        let data = response.data;
+        if(data) {
+          // console.log(data);
+          let itemData = {
+            id: data.id,
+            name: data.name,
+            sprites: data.sprites,
+            base_experience: data.base_experience,
+            height: data.height,
+            weight: data.weight,
+            abilities: data.abilities,
+          };
+
+          items[response.data.id - 1] = itemData;
+          _.saveState({ items: items });
+
+        }
       })
       .catch(function (error) {
         console.log(error);
@@ -72,33 +120,44 @@ class App extends Component {
 
   render() {
     const selected = this.state.selected;
-    const pokis = this.state.pokis;
+    const items = this.state.items;
+    const loading = this.state.loading;
 
     return (
       <div className="app">
-        
+
         <img src={logo} 
           className="app__background" 
-          alt="logo" />
+          alt="logo"/>
         
         <div className="app__main">
+
+          <div>
+            {loading}
+          </div>
 
           <Selection 
             selected={selected} 
             handleSelect={ item => this.handleSelect(item) } />
 
           <List 
-            pokis={pokis} 
+            items={items} 
             handleSelect={ item => this.handleSelect(item) } />
 
         </div>
+
       </div>
     );
   }
 
-  componentWillMount() {
-    this.getData();
-  }
 }
+
+App.propTypes = {
+  state: PropTypes.shape({
+    items: PropTypes.array.isRequired,
+    selected: PropTypes.object,
+    max: PropTypes.number,
+  })
+};
 
 export default App;
