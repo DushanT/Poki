@@ -8,6 +8,9 @@ import logo from './assets/logo.svg';
 import List from './components/List';
 import Selection from './components/Selection';
 import GithubCorner from './components/GithubCorner';
+import Template from './components/Template';
+
+import templates from './templates';
 
 axios.defaults.baseURL = 'https://pokeapi.co/api/v2/';
 
@@ -16,34 +19,48 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.loaded = 0;
-
-    // default state
-    this.state = { 
+    this.defaultState = { 
       items: [],
       selected: null, 
       max: 9,
       loaded: 0,
+      error: {
+        template: ''
+      },
+      template: templates[9],
     };
+
+    this.loaded = 0;
+
+    /** default state */
+    this.state = this.defaultState;
   }
 
-  // init data
+  /** reload data */
+  reload = () => {
+    this.setState(this.defaultState, () => {
+      this.loaded = 0;
+      this.setStorage();
+      this.loadState();
+    });
+  }
+
+  /** init data */
   componentDidMount() {
-    // localStorage.clear();
     this.loadState();
   }
 
-  // main storage
+  /** main storage */
   getStorage() {
     return localStorage.poki;
   }
 
-  // set storage
+  /** set storage */
   setStorage() {
     localStorage.setItem('poki', JSON.stringify(this.state));
   }
 
-  // helper load state 
+  /** helper load state */
   loadState() {
     let state = this.state;
     const storage = this.getStorage();
@@ -57,12 +74,12 @@ class App extends Component {
 
   }
 
+  /** setState helper */
   saveState(state) {
     this.setState(state, () => this.setStorage());
   }
 
-  // get core data from localStorage 
-  // or request from API
+  /** get core data from localStorage or request from API */
   loadItems(oldItems) {
     if (!oldItems.length || (this.state.max !== oldItems.length)) {
       for (let id = 0; id < this.state.max; id++) {
@@ -75,39 +92,9 @@ class App extends Component {
     }
   }
 
-  // handling selection of item
-  handleSelect = (item) => {
-    let selected = null;
-
-    if(item !== null)
-      selected = this.state.items[item.id - 1];
-
-    this.saveState({ 
-      selected: selected 
-    });
-  }
-
-  // get item by id or name
+  /** get item by id or name */
   getItem(items, selector) {
     let _ = this;
-
-    /*setTimeout(() => {
-      let itemData = {
-        id: 1,
-        name: 'bulba',
-        sprites: [],
-        base_experience: 100,
-        height: 10,
-        weight: 1000,
-        abilities: [],
-      };
-
-      items[selector-1] = itemData;
-      _.saveState({ 
-        loaded: ++_.loaded, 
-      });
-    }, 500 * selector);
-    return;*/
 
     axios.get('pokemon/' + selector)
       .then(function (response) {
@@ -123,7 +110,7 @@ class App extends Component {
             abilities: data.abilities,
           };          
 
-          items[response.data.id - 1] = itemData;
+          items[data.id - 1] = itemData;
 
           _.saveState({ 
             loaded: ++_.loaded,
@@ -137,30 +124,80 @@ class App extends Component {
       });
   }
 
-  reload = () => {
-    
-    this.setState({ 
-      items: [],
-      selected: null, 
-      max: 9,
-      loaded: 0,
-    }, () => {
-      this.loaded = 0;
-      this.setStorage();
-      this.loadState();
+  /** handling selection of item */
+  handleSelect = (item) => {
+    let selected = null;
+
+    if(item !== null)
+      selected = this.state.items[item.id - 1];
+
+    this.saveState({ 
+      selected: selected 
     });
+  }
+
+  /** handling template clicks */
+  handleClickTemplate = (id) => {
+    let template = this.state.template;
+    const max = this.state.max;
+    const clickedValue = template[id];
+    const sum = template.reduce((accumulator, current) => (
+      accumulator + current
+    ));
+
+    if(sum >= max && clickedValue === 0) {
+      let timeout;
+      this.setState({
+        error: {
+          template: 'Max ' + max
+        }
+      }, () => {
+        let _ = this;
+        
+        if(timeout)
+          clearTimeout(timeout);
+
+        timeout = setTimeout(() => {
+          _.setState({
+            error: {
+              template: _.defaultState.error.template
+            }
+          });
+        },1500);
+      });
+    } else {
+
+      template[id] = clickedValue === 1 ? 0 : 1;
+      
+      this.saveState({
+        template: template
+      });
+    }
+
   }
 
   render() {
     const selected = this.state.selected;
     const items = this.state.items;
+    const template = this.state.template;
     const percent = (this.state.loaded / this.state.max) * 100;
-    const loading = percent !== 100 ;
+    const loading = percent < 100 ;
+    const error = this.state.error;
 
     return (
       <div className="app">
 
         <GithubCorner/>
+
+        <div className="app__reset"
+          onClick={ this.reload }>
+            Reload
+        </div>
+
+        <Template 
+          error={error.template}
+          template={template}
+          handleClick={ id => this.handleClickTemplate(id) } />
 
         <img src={logo} 
           className="app__background" 
@@ -177,24 +214,16 @@ class App extends Component {
         }
         
         {!loading && 
-          <div className="main">
-
+          <React.Fragment>
             <Selection 
               selected={selected} 
               handleSelect={ item => this.handleSelect(item) } />
 
             <List 
-              items={items} 
+              items={items}
+              template={template} 
               handleSelect={ item => this.handleSelect(item) } />
-
-          </div>
-        }
-
-        {!loading && 
-          <div className="app__reset"
-            onClick={ this.reload }>
-              Reload
-          </div>
+          </React.Fragment>
         }
 
       </div>
@@ -208,6 +237,11 @@ App.propTypes = {
     items: PropTypes.array.isRequired,
     selected: PropTypes.object,
     max: PropTypes.number,
+    loaded: PropTypes.number,
+    error: PropTypes.shape({
+      template: PropTypes.string,
+    }).isRequired,
+    template: PropTypes.array.isRequired,
   })
 };
 

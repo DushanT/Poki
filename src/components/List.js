@@ -3,12 +3,6 @@ import PropTypes from 'prop-types';
 
 import ListItem from './ListItem';
 
-const template = [0,0,1,0,0,
-                  0,1,0,1,0,
-                  1,0,1,0,1,
-                  0,1,0,1,0,
-                  0,0,1,0,0];
-
 class List extends Component {
 
   handleClick(item) {
@@ -37,6 +31,7 @@ class List extends Component {
 
   render() {
     const items = this.props.items;
+    const template = this.props.template;
     let i = 0;
 
     if(!items)
@@ -61,6 +56,7 @@ class List extends Component {
 
 List.propTypes = {
   items: PropTypes.array,
+  template: PropTypes.array.isRequired,
   handleSelect: PropTypes.func.isRequired
 };
 

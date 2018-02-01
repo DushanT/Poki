@@ -57,6 +57,7 @@
     }
     &:hover .item__name {
       opacity: 1;
+      transform: rotate(360deg);
     }
   }
   &__item--full:hover {
@@ -77,6 +78,7 @@
     text-shadow: 1px 1px 3px #fff;
     font-weight: 700;
     text-align: center;
-    transition: opacity .5s ease-out;
+    transform: scale(0.4);
+    transition: transform .3s, opacity .5s ease-out;
   }
 }
